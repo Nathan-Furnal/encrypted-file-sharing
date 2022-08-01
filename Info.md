@@ -179,6 +179,10 @@ class Kernel extends HttpKernel
 }
 ```
 
+For this to work you must also add the `crt` file in the `etc/ssl/...` from
+Vagrant to the Google Chrome authorities otherwise the connection won't be
+considered secured.
+
 ## Modifying authentication to be checked by admin
 See [this
 article](https://dev.to/kingsconsult/customize-laravel-auth-laravel-breeze-registration-and-login-1769)
