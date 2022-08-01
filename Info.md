@@ -7,9 +7,9 @@ composer create-project laravel/laravel <project-name>
 ```
 
 Next, we need to add the relevant libraries to use, which are
-`[breeze](https://laravel.com/docs/9.x/starter-kits)`, a starter kit to takes
+[`breeze`](https://laravel.com/docs/9.x/starter-kits), a starter kit to takes
 care of authentication and
-`[homestead](https://laravel.com/docs/9.x/homestead)`, a web server running into
+[`homestead`](https://laravel.com/docs/9.x/homestead), a web server running into
 a VM which allows SSL (and thus HTTPS).
 
 ``` shell
