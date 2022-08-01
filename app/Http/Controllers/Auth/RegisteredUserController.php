@@ -37,19 +37,18 @@ class RegisteredUserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'confirmed' => [false], // new field defaulted to false, must be modified by hand by admin
         ]);
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'confirmed' => $request->confirmed,
+            'validated' => false, // set to false when new user is created
         ]);
 
         event(new Registered($user));
 
-        Auth::login($user);
+        //        Auth::login($user); Do NOT login automatically once the user is created
 
         return redirect(RouteServiceProvider::HOME);
     }

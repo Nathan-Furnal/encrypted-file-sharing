@@ -31,7 +31,6 @@ class LoginRequest extends FormRequest
         return [
             'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
-            'confirmed' => ['required', 'boolean'],
         ];
     }
 
@@ -46,7 +45,7 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
-        if (! Auth::attempt(array_merge($this->only('email', 'password'), ['confirmed' => true]), $this->boolean('remember'))) { // change authenticate rule
+        if (! Auth::attempt(array_merge($this->only('email', 'password'), ['validated' => true]), $this->boolean('remember'))) { // change authenticate rule, ask validated to be true
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([

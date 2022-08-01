@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('password');
             $table->rememberToken();
             $table->timestamps();
-            $table->boolean('confirmed');
+            $table->boolean('validated')->default(false); // set a new field called validated that is FALSE by default
         });
     }
 
