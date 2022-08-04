@@ -1,7 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-
+use App\Http\Controllers\FriendsController;
+use App\Http\Controllers\StorageController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -13,12 +14,46 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth'])->name('dashboard');
+// Route::get('/dashboard', function () {
+//     return view('dashboard');
+// })->middleware(['auth'])->name('dashboard');
+Route::redirect('/', '/register');
 
-require __DIR__.'/auth.php';
+Route::get('/home', [FriendsController::class, 'index'])
+    ->middleware(['auth'])
+    ->name('home');
+
+Route::get('/users', [FriendsController::class, 'getUsers'])
+    ->name('users.search');
+
+Route::get('/friends', [FriendsController::class, 'getFriends'])
+    ->middleware(['auth'])
+    ->name('friends.list');
+
+Route::get('/friends/add/{user}', [FriendsController::class, 'addFriend'])
+    ->middleware(['auth'])
+    ->name('friends.add');
+
+Route::get('/friends/confirm/{user}', [FriendsController::class, 'confirmFriend'])
+    ->middleware(['auth'])
+    ->name('friends.confirm');
+
+Route::get('/friends/reject/{user}', [FriendsController::class, 'rejectFriend'])
+    ->middleware(['auth'])
+    ->name('friends.reject');
+
+
+Route::get('/files', [StorageController::class, 'getFiles'])
+    ->middleware(['auth'])
+    ->name('files');
+
+Route::post('/store/add', [StorageController::class, 'storeFile'])
+    ->middleware(['auth'])
+    ->name('store.add');
+
+Route::post('/store/download', [StorageController::class, 'downloadFile'])
+    ->middleware(['auth'])
+    ->name('download');
+
+require __DIR__ . '/auth.php';

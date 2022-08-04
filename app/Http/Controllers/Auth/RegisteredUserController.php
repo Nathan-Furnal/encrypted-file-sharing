@@ -49,7 +49,7 @@ class RegisteredUserController extends Controller
         event(new Registered($user));
 
         //        Auth::login($user); Do NOT login automatically once the user is created
-
+        Auth::logout();
         return redirect(RouteServiceProvider::HOME);
     }
 }
