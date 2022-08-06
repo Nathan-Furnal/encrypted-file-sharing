@@ -23,6 +23,25 @@ class StorageController extends Controller
         return view('files.files', compact('files'));
     }
 
+    public function getFilesAndSharedFiles(Request $request){
+        $allFiles = Repository::getFiles(Auth::user()->id);
+        $sharedFiles = Repository::getSharedFiles(Auth::user()->id);
+        $files = [];
+        foreach ($allFiles as $file) {
+            array_push($files, [
+                'path' => $file->path,
+                'name' => Crypt::decrypt($file->name),
+            ]);
+        }
+        foreach($sharedFiles as $file){
+            array_push($files, [
+                'path' => $file->path,
+                'name' => Crypt::decrypt($file->name),
+            ]);
+        }
+        return view('files.files', compact('files'));
+    }
+
     public static function storeFile(Request $request)
     {
         $name = Crypt::encrypt($request->file('user_file')->getClientOriginalName());
@@ -44,5 +63,15 @@ class StorageController extends Controller
         Storage::disk('local')->delete($request->path);
         Repository::removeFile(Auth::user()->id, $request->path);
         return redirect('files');
+    }
+
+    public static function shareFile(Request $request){
+        $owner = Auth::user()->id;
+        $friend = Repository::getUserIdFromEmail($request->friend);
+        $path = $request->path;
+        $name = $request->name;
+        if(Repository::getFriendship($owner, $friend) != null && Repository::getFile($owner, $path) != null){
+            Repository::shareFileWithFriend($owner, $friend, $path, $name);
+        }
     }
 }
