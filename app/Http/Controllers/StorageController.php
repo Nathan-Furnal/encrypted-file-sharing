@@ -39,4 +39,10 @@ class StorageController extends Controller
         return Storage::download($request->path, $request->name);
         return redirect('files');
     }
+
+    public static function removeFile(Request $request){
+        Storage::disk('local')->delete($request->path);
+        Repository::removeFile(Auth::user()->id, $request->path);
+        return redirect('files');
+    }
 }

@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -83,5 +82,9 @@ class Repository
     public static function insertFile(int $owner_id,$path,$name)
     {
        DB::insert('INSERT INTO files (owner_id, path,name, created_at) VALUES (?,?,?,?)', [$owner_id, $path,$name, Carbon::now()]);
+    }
+
+    public static function removeFile(int $owner_id, string $path){
+        DB::table('files')->where('owner_id', '=', $owner_id)->where('path', '=', $path)->delete();
     }
 }

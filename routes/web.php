@@ -56,4 +56,8 @@ Route::post('/store/download', [StorageController::class, 'downloadFile'])
     ->middleware(['auth'])
     ->name('download');
 
+Route::post('/store/delete', [StorageController::class, 'removeFile'])
+    ->middleware(['auth'])
+    ->name('store.delete');
+
 require __DIR__ . '/auth.php';

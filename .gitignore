@@ -14,3 +14,6 @@ npm-debug.log
 yarn-error.log
 /.idea
 /.vscode
+.log
+# Should not consider the app storage on git
+/storage/app
