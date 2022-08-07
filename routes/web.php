@@ -60,4 +60,8 @@ Route::post('/store/delete', [StorageController::class, 'removeFile'])
     ->middleware(['auth'])
     ->name('store.delete');
 
+Route::post('/store/share', [StorageController::class, 'shareFile'])
+    ->middleware(['auth'])
+    ->name('store.share');
+
 require __DIR__ . '/auth.php';

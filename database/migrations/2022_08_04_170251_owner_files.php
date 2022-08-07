@@ -19,7 +19,7 @@ return new class extends Migration
             $table->longText('name');
             $table->dateTime('created_at')->nullable();
             $table->foreign('owner_id', 'owner_file_id')->references('id')->on('users')->onDelete('cascade');
-            $table->primary(['owner_id', 'path']);
+            $table->primary(['owner_id', 'path'], 'primaryKeyFiles');
         });
     }
 

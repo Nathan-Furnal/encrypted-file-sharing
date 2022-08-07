@@ -10,7 +10,7 @@
 
                 <div class="w-max p-6 bg-white border-b border-gray-200 flex ">
                     <div class="mr-auto">
-                        <p class="text-center">Friends</p>
+                        <p class="text-center px-2">Friends</p>
                         <div class="w-fit text-sm font-medium text-gray-900 bg-red border border-gray-200 rounded-md">
                             @foreach ($friends as $friend)
                                 <a href="{{ route('home', $friend->id) }}"
@@ -19,7 +19,7 @@
                         </div>
                     </div>
                     <div>
-                        <p class="text-center">Confirm friends</p>
+                        <p class="text-center px-4">Confirm friends</p>
                         <div class="w-fit text-sm font-medium text-gray-900 bg-red flex flex-column">
                             @foreach ($friendsPending as $friendPending)
                                 <div class="flex flex-row rounded-md">

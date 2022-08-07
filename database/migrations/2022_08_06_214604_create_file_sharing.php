@@ -26,7 +26,7 @@ return new class extends Migration
             $keys = array('owner_id', 'friend_id', 'path');
             $table->primary($keys);
         });
-        DB::statement('ALTER TABLE file_sharing ADD CONSTRAINT check_different CHECK ("owner_id" != "friend_id")');
+        DB::statement('ALTER TABLE file_sharing ADD CONSTRAINT owner_diff_than_friend CHECK ("owner_id" != "friend_id")');
     }
 
     /**

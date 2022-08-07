@@ -1,5 +1,9 @@
 @extends('template')
 @section('title', 'Files')
+
+@if (Session::has('message'))
+<div class="alert alert-info">{{ Session::get('message') }}</div>
+@endif
 <x-app-layout>
 	<x-slot name="header">
 		<h2 class="font-semibold text-xl text-gray-800 leading-tight">
@@ -33,23 +37,38 @@
 					<div class="mr-auto">
 						<p class="text-center">File list</p>
 						<div class="w-fit text-sm font-medium text-gray-900 bg-red border border-gray-200 rounded-md flex">
-							@foreach ($files as $file)
-
-							{{-- <a href="{{ route('download',$file['path']) }}"
-							class="block text-center px-4 py-2 border-b border-gray-200 cursor-pointer hover:bg-gray-100 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-700 focus:text-blue-700">{{ $file['name'] }}</a> --}}
+							@foreach ($files['files'] as $file)
 
 							<form action="{{ route('download')}}" method="POST">
 								@csrf
 								<input type="hidden" name="path" value="{{$file['path']}}" />
 								<input type="hidden" name="name" value="{{$file['name']}}" />
-								<a href="#" onclick="this.parentNode.submit()" class="text-center block px-4 py-2 border-gray-200 cursor-pointer hover:bg-gray-100 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-700 focus:text-blue-700">
+								<a href="#" onclick="this.parentNode.submit()" class="text-center block px-4 py-3 border-gray-200 cursor-pointer hover:bg-gray-100 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-700 focus:text-blue-700">
 									{{ $file['name'] }}
 								</a>
 							</form>
 							<form action="/store/delete" method="POST">
 								@csrf
 								<input type="hidden" name="path" value="{{$file['path']}}" />
-								<input name="" type="submit" value="Delete" class="block bg-red-500 text-white px-4 py-2 hover:bg-red-800" />
+								<input name="" type="submit" value="Delete" class="block bg-red-500 text-white px-4 py-3 hover:bg-red-800" />
+							</form>
+							<form action="/store/share" method="POST" class="ml-4 flex">
+								@csrf
+								<label for="email" class="px-2">Share with: </label>
+								<input id="email" name="email" type="text" value="" required placeholder="friend@gmail.com" />
+								<input type="hidden" name="path" value="{{$file['path']}}" />
+								<input type="hidden" name="name" value="{{$file['name']}}" />
+								<input name="" type="submit" value="Share" class="block bg-sky-400 text-white px-4 py-2 hover:bg-sky-700" />
+							</form>
+							@endforeach
+							@foreach ($files['sharedFiles'] as $file)
+							<form action="{{ route('download')}}" method="POST">
+								@csrf
+								<input type="hidden" name="path" value="{{$file['path']}}" />
+								<input type="hidden" name="name" value="{{$file['name']}}" />
+								<a href="#" onclick="this.parentNode.submit()" class="text-center block px-4 py-3 border-gray-200 cursor-pointer hover:bg-gray-100 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-700 focus:text-blue-700">
+									{{ $file['name'] }}
+								</a>
 							</form>
 							@endforeach
 						</div>
@@ -58,20 +77,3 @@
 			</div>
 		</div>
 </x-app-layout>
-
-
-{{-- <div>
-    <form action="/store/add" method="POST" enctype="multipart/form-data">
-        @csrf
-        <label for="avatar">Choose a profile picture:</label>
-        <input type="file" id="avatar" name="user_file">
-        <br>
-        <input type="submit">click
-    </form>
-</div>
-<div>
-    @foreach ($allFiles as $file)
-    <a href="{{ route('home', $file->owner_id) }}"
-class="block text-center px-4 py-2 border-b border-gray-200 cursor-pointer hover:bg-gray-100 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-700 focus:text-blue-700">{{ $file->path }}</a>
-@endforeach
-</div> --}}

@@ -13,32 +13,22 @@ class StorageController extends Controller
     public static function getFiles(Request $request)
     {
         $allFiles = Repository::getFiles(Auth::user()->id);
-        $files = [];
-        foreach ($allFiles as $file) {
-            array_push($files, [
-                'path' => $file->path,
-                'name' => Crypt::decrypt($file->name),
-            ]);
-        }
-        return view('files.files', compact('files'));
-    }
-
-    public function getFilesAndSharedFiles(Request $request){
-        $allFiles = Repository::getFiles(Auth::user()->id);
         $sharedFiles = Repository::getSharedFiles(Auth::user()->id);
-        $files = [];
+        $normal_files = [];
+        $shared_files = [];
         foreach ($allFiles as $file) {
-            array_push($files, [
+            array_push($normal_files, [
                 'path' => $file->path,
                 'name' => Crypt::decrypt($file->name),
             ]);
         }
-        foreach($sharedFiles as $file){
-            array_push($files, [
+        foreach ($sharedFiles as $file) {
+            array_push($shared_files, [
                 'path' => $file->path,
                 'name' => Crypt::decrypt($file->name),
             ]);
         }
+        $files = ['files' => $normal_files, 'sharedFiles' => $shared_files];
         return view('files.files', compact('files'));
     }
 
@@ -67,11 +57,20 @@ class StorageController extends Controller
 
     public static function shareFile(Request $request){
         $owner = Auth::user()->id;
-        $friend = Repository::getUserIdFromEmail($request->friend);
+        $friend = Repository::getUserIdFromEmail($request->email);
         $path = $request->path;
-        $name = $request->name;
-        if(Repository::getFriendship($owner, $friend) != null && Repository::getFile($owner, $path) != null){
-            Repository::shareFileWithFriend($owner, $friend, $path, $name);
+        $name = Crypt::encrypt($request->name);
+        if($friend != null && Repository::getFriendship($owner, $friend) != null && Repository::getFile($owner, $path) != null){
+            if(!Repository::sharedFileRecordExists($owner, $friend, $path)){
+                Repository::shareFileWithFriend($owner, $friend, $path, $name);
+                return redirect('files')->with('message', 'File was shared successfully!');
+            }
+            else{
+                return redirect('files')->with('message', 'File was already shared with this user.');
+            }
+        }
+        else{
+            return redirect('files')->with('message', 'No such friend');
         }
     }
 }

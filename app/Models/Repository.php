@@ -97,7 +97,15 @@ class Repository
     }
 
     public static function shareFileWithFriend(int $owner_id, int $friend_id, string $path, string $name){
-        DB::insert('INSERT INTO file_sharing (owner_id, friend_id, path) VALUE (?,?,?,?)', [$owner_id, $friend_id, $path, $name]);
+        DB::insert('INSERT INTO file_sharing (owner_id, friend_id, path, name) VALUE (?,?,?,?)', [$owner_id, $friend_id, $path, $name]);
+    }
+
+    public static function sharedFileRecordExists(int $owner_id, int $friend_id, string $path){
+        return DB::table('file_sharing')
+            ->where('owner_id', '=', $owner_id)
+            ->where('friend_id', '=', $friend_id)
+            ->where('path', '=', $path)
+            ->exists();
     }
 
     public static function getFriendship(int $person, int $friend){
@@ -108,8 +116,14 @@ class Repository
     }
 
     public static function getUserIdFromEmail(string $email){
-        return DB::table('users')
-            ->where('email', '=', $email)->first()->id();
+        $output = DB::table('users')
+            ->where('email', '=', $email)->first();
+        if($output == null){
+            return null;
+        }
+        else{
+            return $output->id;
+        }
     }
 
     public static function getSharedFiles(int $user_id){
