@@ -25,6 +25,7 @@ Route::get('/home', [FriendsController::class, 'index'])
     ->name('home');
 
 Route::get('/users', [FriendsController::class, 'getUsers'])
+    ->middleware(['auth'])
     ->name('users.search');
 
 Route::get('/friends', [FriendsController::class, 'getFriends'])
