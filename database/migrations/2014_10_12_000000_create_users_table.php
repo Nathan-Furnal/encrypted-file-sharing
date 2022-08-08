@@ -22,6 +22,7 @@ return new class extends Migration
             $table->rememberToken();
             $table->timestamps();
             $table->boolean('validated')->default(false); // set a new field called validated that is FALSE by default
+            $table->string('public_key_enc');
         });
     }
 

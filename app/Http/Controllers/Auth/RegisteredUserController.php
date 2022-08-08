@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
+use phpseclib3\Crypt\RSA;
 
 class RegisteredUserController extends Controller
 {
@@ -38,12 +39,19 @@ class RegisteredUserController extends Controller
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
-
+        $private = RSA::createKey();
+        $public = $private->getPublicKey();
+        $path = base_path() . '/privateKeys/' . $request->email . '/';
+        if(!is_dir($path))
+            mkdir($path, 0777, true);
+        file_put_contents($path . 'key.pem', $private);
+        
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'validated' => false, // set to false when new user is created
+            'validated' => false, // default validated value
+            'public_key_enc' => $public,
         ]);
 
         event(new Registered($user));

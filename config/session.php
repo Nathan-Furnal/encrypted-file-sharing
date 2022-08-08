@@ -31,7 +31,7 @@ return [
     |
     */
 
-    'lifetime' => env('SESSION_LIFETIME', 60),
+    'lifetime' => env('SESSION_LIFETIME', 30),
 
     'expire_on_close' => true, // Forces re-connection anytime the browser is closed
 
@@ -46,7 +46,10 @@ return [
     |
     */
 
-    'encrypt' => false,
+    'encrypt' => true, // make session data encrypted by default
+    // Since session data is encrypted, it's not possible to extract session data
+    // Not incredibly useful is server is compromised
+    // See https://security.stackexchange.com/questions/18880/do-you-need-to-encrypt-session-data
 
     /*
     |--------------------------------------------------------------------------
