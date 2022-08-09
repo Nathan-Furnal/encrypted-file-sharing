@@ -17,13 +17,14 @@ return new class extends Migration
         Schema::create('file_sharing', function (Blueprint $table) {
             $table->unsignedBigInteger('owner_id');
             $table->unsignedBigInteger('friend_id');
-            $table->string('path');
+            $table->unsignedBigInteger('file_id');
             $table->longText('name');
+            $table->longText('content');
             $table->foreign('owner_id', 'owner')->references('id')->on('users')->onDelete('cascade');
             $table->foreign('friend_id', 'friend')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign(['owner_id', 'path'], 'owner_and_file')->references(['owner_id', 'path'])->on('files')->onDelete('cascade');
-            $table->unique(array('owner_id', 'friend_id', 'path'));
-            $keys = array('owner_id', 'friend_id', 'path');
+            $table->foreign('file_id', 'file')->references('id')->on('files')->onDelete('cascade');
+            $table->unique(array('owner_id', 'friend_id', 'file_id'));
+            $keys = array('owner_id', 'friend_id', 'file_id');
             $table->primary($keys);
         });
         DB::statement('ALTER TABLE file_sharing ADD CONSTRAINT owner_diff_than_friend CHECK ("owner_id" != "friend_id")');

@@ -14,12 +14,12 @@ return new class extends Migration
     public function up()
     {
         Schema::create('files', function (Blueprint $table) {
+            $table->id();
             $table->unsignedBigInteger('owner_id');
-            $table->string('path');
             $table->longText('name');
+            $table->longText('content');
             $table->dateTime('created_at')->nullable();
             $table->foreign('owner_id', 'owner_file_id')->references('id')->on('users')->onDelete('cascade');
-            $table->primary(['owner_id', 'path'], 'primaryKeyFiles');
         });
     }
 
