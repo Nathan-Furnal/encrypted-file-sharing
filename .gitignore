@@ -17,3 +17,5 @@ yarn-error.log
 .log
 # Should not consider the app storage on git
 /storage/app
+# Leave secrets alone
+privateKeys/
