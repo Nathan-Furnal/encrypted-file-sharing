@@ -79,32 +79,36 @@ class Repository
         return $files;
     }
 
-    public static function getFile(int $owner_id, string $path)
+    public static function getFile(int $file_id)
     {
         return DB::table('files')
-               ->where('owner_id', '=', $owner_id)
-               ->where('path', '=', $path)
-               ->get();
+            ->where('id','=', $file_id)
+            ->get();
     }    
 
-    public static function insertFile(int $owner_id,string $path,string $name)
+    public static function insertFile(int $owner_id, string $name, string $content)
     {
-       DB::insert('INSERT INTO files (owner_id, path,name, created_at) VALUES (?,?,?,?)', [$owner_id, $path,$name, Carbon::now()]);
+        DB::table('files')->insert(array(
+            'owner_id' => $owner_id,
+            'name' => $name,
+            'content' => $content,
+            'created_at' => Carbon::now(),
+        ));
     }
 
-    public static function removeFile(int $owner_id, string $path){
-        DB::table('files')->where('owner_id', '=', $owner_id)->where('path', '=', $path)->delete();
+    public static function removeFile(int $file_id){
+        DB::table('files')->where('id', '=', $file_id)->delete();
     }
 
-    public static function shareFileWithFriend(int $owner_id, int $friend_id, string $path, string $name){
-        DB::insert('INSERT INTO file_sharing (owner_id, friend_id, path, name) VALUE (?,?,?,?)', [$owner_id, $friend_id, $path, $name]);
+    public static function shareFileWithFriend(int $owner_id, int $friend_id, int $file_id, string $name, string $content){
+        DB::insert('INSERT INTO file_sharing (owner_id, friend_id, file_id, name, content) VALUE (?,?,?,?,?)', [$owner_id, $friend_id, $file_id, $name, $content]);
     }
 
-    public static function sharedFileRecordExists(int $owner_id, int $friend_id, string $path){
+    public static function sharedFileRecordExists(int $owner_id, int $friend_id, int $file_id){
         return DB::table('file_sharing')
             ->where('owner_id', '=', $owner_id)
             ->where('friend_id', '=', $friend_id)
-            ->where('path', '=', $path)
+            ->where('file_id', '=', $file_id)
             ->exists();
     }
 
@@ -129,4 +133,20 @@ class Repository
     public static function getSharedFiles(int $user_id){
         return DB::table('file_sharing')->where('friend_id', '=', $user_id)->get();
     }
+
+    public static function getSharedFile(int $owner_id, int $friend_id, int $file_id){
+        return DB::table('file_sharing')
+            ->where('owner_id', '=', $owner_id)
+            ->where('friend_id', '=', $friend_id)
+            ->where('file_id', '=', $file_id)
+            ->get();
+    }    
+
+    public static function getEmailFromUserId(int $user_id){
+        return DB::table('users')->where('id', '=', $user_id)->get()->first()->email;
+    }
+
+    public static function getUserPublicKey(int $user_id){
+        return DB::table('users')->where('id', '=', $user_id)->get('public_key_enc')->first()->public_key_enc;
+    }    
 }
