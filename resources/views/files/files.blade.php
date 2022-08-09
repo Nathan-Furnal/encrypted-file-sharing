@@ -40,23 +40,21 @@
 							<div class="py-2" style="display: flex; flex:stretch; justify-content: space-around;">
 								<form action="{{ route('download')}}" method="POST">
 									@csrf
-									<input type="hidden" name="path" value="{{$file['path']}}" />
-									<input type="hidden" name="name" value="{{$file['name']}}" />
+									<input type="hidden" name="id" value="{{$file['id']}}" />
 									<a href="#" onclick="this.parentNode.submit()" class="text-center block px-4 py-3 border-gray-200 cursor-pointer hover:bg-gray-100 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-700 focus:text-blue-700">
 										{{ $file['name'] }}
 									</a>
 								</form>
 								<form action="/store/delete" method="POST">
 									@csrf
-									<input type="hidden" name="path" value="{{$file['path']}}" />
+									<input type="hidden" name="id" value="{{$file['id']}}" />
 									<input name="" type="submit" value="Delete" class="block bg-red-500 text-white px-4 py-3 hover:bg-red-800" />
 								</form>
 								<form action="/store/share" method="POST">
 									@csrf
 									<label for="email" class="px-2">Share with: </label>
 									<input id="email" name="email" type="text" value="" required placeholder="friend@gmail.com" />
-									<input type="hidden" name="path" value="{{$file['path']}}" />
-									<input type="hidden" name="name" value="{{$file['name']}}" />
+									<input type="hidden" name="id" value="{{$file['id']}}" />
 									<input name="" type="submit" value="Share" class="bg-sky-400 text-white px-4 py-3 hover:bg-sky-700" />
 								</form>
 							</div>
@@ -64,8 +62,9 @@
 							@foreach ($files['sharedFiles'] as $file)
 							<form action="{{ route('download')}}" method="POST">
 								@csrf
-								<input type="hidden" name="path" value="{{$file['path']}}" />
-								<input type="hidden" name="name" value="{{$file['name']}}" />
+								<input type="hidden" name="id" value="{{$file['id']}}" />
+								<input type="hidden" name="owner" value="{{$file['owner']}}" />
+								<input type="hidden" name="friend" value="{{$file['friend']}}" />
 								<a href="#" onclick="this.parentNode.submit()" class="text-center block px-4 py-3 border-gray-200 cursor-pointer hover:bg-gray-100 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-700 focus:text-blue-700">
 									{{ $file['name'] }}
 								</a>
