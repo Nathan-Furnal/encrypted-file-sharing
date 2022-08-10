@@ -44,7 +44,6 @@ Route::get('/friends/reject/{user}', [FriendsController::class, 'rejectFriend'])
     ->middleware(['auth'])
     ->name('friends.reject');
 
-
 Route::get('/files', [StorageController::class, 'getFiles'])
     ->middleware(['auth'])
     ->name('files');
