@@ -18,8 +18,7 @@ return new class extends Migration
             $table->unsignedBigInteger('owner_id');
             $table->unsignedBigInteger('friend_id');
             $table->unsignedBigInteger('file_id');
-            $table->longText('name');
-            $table->longText('content');
+            $table->longText('enc_key');
             $table->foreign('owner_id', 'owner')->references('id')->on('users')->onDelete('cascade');
             $table->foreign('friend_id', 'friend')->references('id')->on('users')->onDelete('cascade');
             $table->foreign('file_id', 'file')->references('id')->on('files')->onDelete('cascade');

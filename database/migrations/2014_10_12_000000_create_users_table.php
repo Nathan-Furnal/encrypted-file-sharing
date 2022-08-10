@@ -16,13 +16,14 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('email')->unique();
+            $table->string('email')->unique(); // important pour retrouver les données
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();
             $table->timestamps();
             $table->boolean('validated')->default(false); // set a new field called validated that is FALSE by default
             $table->longText('public_key_enc');
+            $table->longText('public_key_sign');
         });
     }
 

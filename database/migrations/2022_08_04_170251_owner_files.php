@@ -17,9 +17,9 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('owner_id');
             $table->longText('name');
-            $table->longText('content');
             $table->dateTime('created_at')->nullable();
             $table->foreign('owner_id', 'owner_file_id')->references('id')->on('users')->onDelete('cascade');
+            $table->longText('enc_key');
         });
     }
 

@@ -5,109 +5,141 @@ namespace App\Http\Controllers;
 use App\Models\Repository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use phpseclib3\Crypt\RSA;
+use Illuminate\Support\Facades\Storage;
+use ParagonIE\Halite\Asymmetric\Crypto as AsymmetricCrypto;
+use ParagonIE\Halite\File;
+use ParagonIE\Halite\KeyFactory;
+use ParagonIE\Halite\Symmetric\Crypto;
+use ParagonIE\HiddenString\HiddenString;
+use ParagonIE\Halite\Stream\MutableFile;
+
 
 class StorageController extends Controller
 {
+    private static $validExtensions = ['txt', 'csv', 'pdf', 'jpg', 'jpeg', 'png', 'docx'];
 
-    // https://stackoverflow.com/questions/11449577/why-is-base64-encode-adding-a-slash-in-the-result
-    public static function base64_url_encode(string $str){
-        return str_replace(array('+', '/'), array('-', '_'), base64_encode($str));
+    private static function getUserPublicKey(int $user_id){
+        $out = Repository::getUserPublicKey($user_id);
+        return KeyFactory::importEncryptionPublicKey(new HiddenString($out));
     }
 
-    public static function base64_url_decode($str) {
-        return base64_decode(str_replace(array('-', '_'), array('+', '/'), $str));
+    private static function getUserPrivateKey(int $user_id){
+        $email = Repository::getEmailFromUserId($user_id);
+        return KeyFactory::loadEncryptionSecretKey(base_path().'/privateKeys/'.$email .'/key.pem');
     }
+
     public static function getFiles(Request $request)
     {
-        $email = Repository::getEmailFromUserId(Auth::user()->id);
-        $privateKey = RSA::loadPrivateKey(file_get_contents(base_path().'/privateKeys/'.$email .'/key.pem'));
+        $privateKey = StorageController::getUserPrivateKey(Auth::user()->id);
         $allFiles = Repository::getFiles(Auth::user()->id);
         $sharedFiles = Repository::getSharedFiles(Auth::user()->id);
         $normal_files = [];
         $shared_files = [];
         foreach ($allFiles as $file) {
+        // Decrypt (unseal) the AES key, convert it to the proper string and load it as a key
+            $keyAsString = AsymmetricCrypto::unseal($file->enc_key, $privateKey);
+            $enc_key = KeyFactory::importEncryptionKey($keyAsString);
             array_push($normal_files, [
                 'id' => $file->id,
-                'name' => $privateKey->decrypt(StorageController::base64_url_decode($file->name)),
+                'name' => Crypto::decrypt($file->name, $enc_key)->getString(),
             ]);
         }
         foreach ($sharedFiles as $file) {
+            $ownerPubKey = StorageController::getUserPublicKey($file->owner_id);
+            $keyAsString = AsymmetricCrypto::decrypt($file->enc_key, $privateKey, $ownerPubKey);
+            $enc_key = KeyFactory::importEncryptionKey($keyAsString);
             array_push($shared_files, [
                 'id' => $file->file_id,
                 'owner'=> $file->owner_id,
                 'friend' => $file->friend_id,
-                'name' => $privateKey->decrypt(StorageController::base64_url_decode($file->name)),                
+                'name' =>  Crypto::decrypt(Repository::getFile($file->file_id)->first()->name, $enc_key)->getString(),
             ]);
         }
         $files = ['files' => $normal_files, 'sharedFiles' => $shared_files];
         return view('files.files', compact('files'));
     }
 
-    public static function storeFile(Request $request)
-    {   $file = $request->file('user_file');
-        $email = Repository::getEmailFromUserId(Auth::user()->id);
-        $privateKey = RSA::loadPrivateKey(file_get_contents(base_path().'/privateKeys/'.$email .'/key.pem'));
-        $name = $file->getClientOriginalName();
-        $name = StorageController::base64_url_encode($privateKey->getPublicKey()->encrypt($name));
-        $content = base64_encode($privateKey->getPublicKey()->encrypt($file->getContent()));
-        //dd('path :'. $path . ' name :' . $name);
-        Repository::insertFile(Auth::user()->id, $name, $content);
+    public static function storeFile(Request $request){
+        $file = $request->file('user_file');
+        if($file == null){
+            return redirect('files')->with('message', "A file must be uploaded.");
+        }
+        if(!in_array($file->extension(), StorageController::$validExtensions)){
+            return redirect('files')->with('message', 'Not a valid file extension, please use one of:  '.implode(', ', StorageController::$validExtensions));
+        }
+        // 1. Generate AES key
+        // 2. Crypt the file and file name with it
+        // 3. Store it sealed with the public key
+        $enc_key = KeyFactory::generateEncryptionKey();
+        $keyAsString = KeyFactory::export($enc_key)->getString();
+        $cipheredName = Crypto::encrypt(new HiddenString($file->getClientOriginalName()), $enc_key);
+        $pubKey = StorageController::getUserPublicKey(Auth::user()->id);
+        $sealed = AsymmetricCrypto::seal(new HiddenString($keyAsString), $pubKey);
+        File::encrypt($file, storage_path().'/app/'.$cipheredName, $enc_key);
+        Repository::insertFile(Auth::user()->id, $cipheredName, $sealed);
         return redirect('files');
     }
+
     public static function downloadFile(Request $request)
     {
-        $email = Repository::getEmailFromUserId(Auth::user()->id);
-        $privateKey = RSA::loadPrivateKey(file_get_contents(base_path().'/privateKeys/'.$email .'/key.pem'));
+        $privateKey = StorageController::getUserPrivateKey(Auth::user()->id);
         if($request->has('owner') && $request->has('friend')){
             // content is re-encrypted when file is shared so a different content has to be fetched when a file is shared
-            $file = Repository::getSharedFile($request->owner, $request->friend, $request->id)->first();
-            $name = $privateKey->decrypt(StorageController::base64_url_decode($file->name));
-            $content = $privateKey->decrypt(base64_decode($file->content));
+            $sharedFile = Repository::getSharedFile($request->owner, $request->friend, $request->id)->first();
+            $ownerPubKey = StorageController::getUserPublicKey($sharedFile->owner_id);
+            $keyAsString = AsymmetricCrypto::decrypt($sharedFile->enc_key, $privateKey, $ownerPubKey);
+            $enc_key = KeyFactory::importEncryptionKey($keyAsString);
+            $file = Repository::getFile($request->id)->first();            
+            $decipheredName = Crypto::decrypt($file->name, $enc_key)->getString();
         }
         else{
-        $file = Repository::getFile($request->id)->first();
-        $name = $privateKey->decrypt(StorageController::base64_url_decode($file->name));
-        $content = $privateKey->decrypt(base64_decode($file->content));
+            $file = Repository::getFile($request->id)->first();
+            $keyAsString = AsymmetricCrypto::unseal($file->enc_key, $privateKey);
+            $enc_key = KeyFactory::importEncryptionKey($keyAsString);        
+            $decipheredName = Crypto::decrypt($file->name, $enc_key)->getString();
         }
+        $filepath = storage_path().'/app/'.$file->name;
+        $stream = new MutableFile(fopen('php://output', 'wb'));
+        ob_start();
+        File::decrypt($filepath, $stream, $enc_key);
         // Can't believe it https://stackoverflow.com/questions/34624118/working-with-encrypted-files-in-laravel-how-to-download-decrypted-file
-        return response()->streamDownload(function() use($content) {
-            echo $content;
-        } ,$name);
-       
+        return response()->streamDownload(function() {
+            echo ob_get_clean();
+        } ,$decipheredName);
         return redirect('files');
     }
 
     public static function removeFile(Request $request){
-        $file = Repository::getFile($request->id)->first();        
+        $file = Repository::getFile($request->id)->first();
         Repository::removeFile($file->id);
+        Storage::disk('local')->delete($file->name);
         return redirect('files');
     }
 
     public static function shareFile(Request $request){
-        $owner = Auth::user()->id;
-        $friend = Repository::getUserIdFromEmail($request->email);
-        if($owner == $friend){
+        $owner_id = Auth::user()->id;
+        $friend_id = Repository::getUserIdFromEmail($request->email);
+        if($owner_id == $friend_id){
             return redirect('files')->with('message', "Can't share files with yourself.");
         }
-        // friendships are annoyingly one way so both ways have to be checked, since it's sufficient
-        $owner_friend_friendship = (Repository::getFriendship($owner, $friend)->first() == null) ? false : strcmp(Repository::getFriendship($owner, $friend)->first()->status, 'confirmed');
-        $friend_owner_friendship = (Repository::getFriendship($friend, $owner)->first() == null) ? false : strcmp(Repository::getFriendship($friend, $owner)->first()->status, 'confirmed');
+        // friendships are annoyingly one way so both ways have to be checked, since it's sufficient to be friend one-way to share
+        // string are equal when strcmp is 0 in PHP
+        $owner_friend_friendship = (Repository::getFriendship($owner_id, $friend_id)->first() == null) ? false
+                                 : strcmp(Repository::getFriendship($owner_id, $friend_id)->first()->status, 'confirmed') === 0;
+        $friend_owner_friendship = (Repository::getFriendship($friend_id, $owner_id)->first() == null) ? false
+                                 : strcmp(Repository::getFriendship($friend_id, $owner_id)->first()->status, 'confirmed') === 0;        
         $areFriends = $owner_friend_friendship || $friend_owner_friendship;
         $file = Repository::getFile($request->id)->first();
-        if($areFriends == 0){ // string are equal when strcmp is 0 in PHP              
-            if(!Repository::sharedFileRecordExists($owner, $friend, $file->id)){
-                // Decrypting file name and file content for current user
-                // And encrypting them with the pub key of the friend
+        if($areFriends){               
+            if(!Repository::sharedFileRecordExists($owner_id, $friend_id, $file->id)){
+                // Decrypting encryption key before sending it
+                // And encrypting it with the pub key of the friend
                 // Such that friend can decrypt with their own private key on their end
-                $email = Repository::getEmailFromUserId(Auth::user()->id);
-                $privateKey = RSA::loadPrivateKey(file_get_contents(base_path().'/privateKeys/'.$email .'/key.pem'));
-                $decryptedName = $privateKey->decrypt(StorageController::base64_url_decode($file->name));
-                $decryptedContent =$privateKey->decrypt(base64_decode($file->content));
-                $friendPubKey = RSA::loadPublicKey(Repository::getUserPublicKey($friend));                
-                $encryptedName = StorageController::base64_url_encode($friendPubKey->encrypt($decryptedName));
-                $encryptedContent = base64_encode($friendPubKey->encrypt($decryptedContent));
-                Repository::shareFileWithFriend($owner, $friend, $file->id, $encryptedName, $encryptedContent);
+                $privateKey = StorageController::getUserPrivateKey(Auth::user()->id);
+                $keyAsString = AsymmetricCrypto::unseal($file->enc_key, $privateKey);
+                $friendPubKey = StorageController::getUserPublicKey($friend_id);
+                $enc_for_friend = AsymmetricCrypto::encrypt($keyAsString, $privateKey, $friendPubKey);
+                Repository::shareFileWithFriend($owner_id, $friend_id, $file->id, $enc_for_friend);
                 return redirect('files')->with('message', 'File was shared successfully!');
             }
             else{

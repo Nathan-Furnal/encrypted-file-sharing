@@ -86,12 +86,12 @@ class Repository
             ->get();
     }    
 
-    public static function insertFile(int $owner_id, string $name, string $content)
+    public static function insertFile(int $owner_id, string $name, string $enc_key)
     {
         DB::table('files')->insert(array(
             'owner_id' => $owner_id,
             'name' => $name,
-            'content' => $content,
+            'enc_key' => $enc_key,
             'created_at' => Carbon::now(),
         ));
     }
@@ -100,8 +100,8 @@ class Repository
         DB::table('files')->where('id', '=', $file_id)->delete();
     }
 
-    public static function shareFileWithFriend(int $owner_id, int $friend_id, int $file_id, string $name, string $content){
-        DB::insert('INSERT INTO file_sharing (owner_id, friend_id, file_id, name, content) VALUE (?,?,?,?,?)', [$owner_id, $friend_id, $file_id, $name, $content]);
+    public static function shareFileWithFriend(int $owner_id, int $friend_id, int $file_id, string $enc_key){
+        DB::insert('INSERT INTO file_sharing (owner_id, friend_id, file_id, enc_key) VALUE (?,?,?,?)', [$owner_id, $friend_id, $file_id, $enc_key]);
     }
 
     public static function sharedFileRecordExists(int $owner_id, int $friend_id, int $file_id){
