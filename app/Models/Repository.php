@@ -86,12 +86,13 @@ class Repository
             ->get();
     }    
 
-    public static function insertFile(int $owner_id, string $name, string $enc_key)
+    public static function insertFile(int $owner_id, string $name, string $enc_key, string $file_ext)
     {
         DB::table('files')->insert(array(
             'owner_id' => $owner_id,
             'name' => $name,
             'enc_key' => $enc_key,
+            'file_ext' => $file_ext,
             'created_at' => Carbon::now(),
         ));
     }
@@ -148,5 +149,9 @@ class Repository
 
     public static function getUserPublicKey(int $user_id){
         return DB::table('users')->where('id', '=', $user_id)->get('public_key_enc')->first()->public_key_enc;
-    }    
+    }
+
+    public static function getExistingFileFromName(string $name){
+        return DB::table('files')->where('name', $name)->get();
+    }
 }

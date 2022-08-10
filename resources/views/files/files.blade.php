@@ -12,6 +12,21 @@
 	<div class="py-12">
 		<div class="w-auto mx-auto sm:px-6 lg:px-8">
 			<div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+				<div class="w-auto p-6 bg-white border-b border-gray-200">
+					<p class="">
+	To upload a file, use the form here under. Once a file is uploaded, you can download if by clicking on its name.
+						If you are the file owner, more options are available, if the file is shared with you, you can only download it.
+					</p>
+					<p class="">
+						To delete a file you own, click on the red button. To update the content of an existing file, select the new file from
+						your storage, from the center form, and click the green button. Beware, it will overwrite the existing file!
+					</p>
+					<p class="">
+						To share a file with someone from your contact list, add their email address to the right most form and click the blue button.
+						Note that you will only be able to share with someone from your contact list.
+					</p>
+
+				</div>
 				<div class="w-max p-6 bg-white border-b border-gray-200 flex ">
 					<div class="mr-auto">
 						<p class="text-center">Upload file</p>
@@ -49,6 +64,12 @@
 									@csrf
 									<input type="hidden" name="id" value="{{$file['id']}}" />
 									<input name="" type="submit" value="Delete" class="block bg-red-500 text-white px-4 py-3 hover:bg-red-800" />
+								</form>
+								<form action="/store/edit" method="POST" enctype="multipart/form-data" class="flex mx-4">
+									@csrf
+									<input type="file" id="edit_file" name="edit_file" style="width: 70%;">
+									<input type="hidden" name="id" value="{{$file['id']}}" />
+									<input name="" type="submit" value="Edit" class="block bg-green-500 text-white px-4 py-3 hover:bg-green-800" />
 								</form>
 								<form action="/store/share" method="POST">
 									@csrf

@@ -16,7 +16,7 @@ use ParagonIE\Halite\Stream\MutableFile;
 
 class StorageController extends Controller
 {
-    private static $validExtensions = ['txt', 'csv', 'pdf', 'jpg', 'jpeg', 'png', 'docx'];
+    private static $validExtensions = ['txt', 'csv', 'pdf', 'jpg', 'jpeg', 'png', 'docx', 'org'];
 
     private static function getUserPublicKey(int $user_id){
         $out = Repository::getUserPublicKey($user_id);
@@ -36,7 +36,7 @@ class StorageController extends Controller
         $normal_files = [];
         $shared_files = [];
         foreach ($allFiles as $file) {
-        // Decrypt (unseal) the AES key, convert it to the proper string and load it as a key
+        // Decrypt (unseal) the symmetric key, convert it to the proper string and load it as a key
             $keyAsString = AsymmetricCrypto::unseal($file->enc_key, $privateKey);
             $enc_key = KeyFactory::importEncryptionKey($keyAsString);
             array_push($normal_files, [
@@ -67,17 +67,41 @@ class StorageController extends Controller
         if(!in_array($file->extension(), StorageController::$validExtensions)){
             return redirect('files')->with('message', 'Not a valid file extension, please use one of:  '.implode(', ', StorageController::$validExtensions));
         }
-        // 1. Generate AES key
+        // 1. Generate the symmetric key
         // 2. Crypt the file and file name with it
         // 3. Store it sealed with the public key
         $enc_key = KeyFactory::generateEncryptionKey();
         $keyAsString = KeyFactory::export($enc_key)->getString();
         $cipheredName = Crypto::encrypt(new HiddenString($file->getClientOriginalName()), $enc_key);
+        $cipheredExt = Crypto::encrypt(new HiddenString($file->extension()), $enc_key);
         $pubKey = StorageController::getUserPublicKey(Auth::user()->id);
         $sealed = AsymmetricCrypto::seal(new HiddenString($keyAsString), $pubKey);
         File::encrypt($file, storage_path().'/app/'.$cipheredName, $enc_key);
-        Repository::insertFile(Auth::user()->id, $cipheredName, $sealed);
+        Repository::insertFile(Auth::user()->id, $cipheredName, $sealed, $cipheredExt);
         return redirect('files');
+    }
+
+    public static function editFile(Request $request){
+        $newFile = $request->file('edit_file');
+        if($newFile == null){
+            return redirect('files')->with('message', "A file must be uploaded.");
+        }
+        if(!in_array($newFile->extension(), StorageController::$validExtensions)){
+            return redirect('files')->with('message', 'Not a valid file extension, please use one of:  '.implode(', ', StorageController::$validExtensions));
+        }        
+        $oldFile = Repository::getFile($request->id)->first();
+        $oldName = $oldFile->name;
+        $privateKey = StorageController::getUserPrivateKey($oldFile->owner_id);
+        $keyAsString = AsymmetricCrypto::unseal($oldFile->enc_key, $privateKey);
+        $enc_key = KeyFactory::importEncryptionKey($keyAsString);
+        $file_ext = Crypto::decrypt($oldFile->file_ext, $enc_key)->getString();
+        if(strcmp($newFile->extension(), $file_ext) !== 0){
+            return redirect('files')->with('message', "The file extensions are not matching.");
+        }
+        Storage::disk('local')->delete($oldName);
+        File::encrypt($newFile, storage_path().'/app/'.$oldName, $enc_key);
+        return redirect('files')->with('message', "The file was updated successfully.");
+        // TODO: Update signature
     }
 
     public static function downloadFile(Request $request)
@@ -99,12 +123,13 @@ class StorageController extends Controller
             $decipheredName = Crypto::decrypt($file->name, $enc_key)->getString();
         }
         $filepath = storage_path().'/app/'.$file->name;
+        // Write the file to the output buffer on the fly and empty it
         $stream = new MutableFile(fopen('php://output', 'wb'));
         ob_start();
         File::decrypt($filepath, $stream, $enc_key);
         // Can't believe it https://stackoverflow.com/questions/34624118/working-with-encrypted-files-in-laravel-how-to-download-decrypted-file
         return response()->streamDownload(function() {
-            echo ob_get_clean();
+            echo ob_get_clean(); // buffer is empty after that
         } ,$decipheredName);
         return redirect('files');
     }
@@ -117,10 +142,14 @@ class StorageController extends Controller
     }
 
     public static function shareFile(Request $request){
+        
         $owner_id = Auth::user()->id;
         $friend_id = Repository::getUserIdFromEmail($request->email);
         if($owner_id == $friend_id){
             return redirect('files')->with('message', "Can't share files with yourself.");
+        }
+        if($friend_id == null){
+            return redirect('files')->with('message', 'No such friend');
         }
         // friendships are annoyingly one way so both ways have to be checked, since it's sufficient to be friend one-way to share
         // string are equal when strcmp is 0 in PHP
