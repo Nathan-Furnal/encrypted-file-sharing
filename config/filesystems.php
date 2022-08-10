@@ -56,6 +56,12 @@ return [
             'throw' => false,
         ],
 
+        'keys' => [
+            'driver' => 'local',
+            'root' => base_path('privateKeys'),
+            'throw' => false,
+        ],
+
     ],
 
     /*
