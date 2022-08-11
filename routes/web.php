@@ -68,4 +68,8 @@ Route::post('/store/edit', [StorageController::class, 'editFile'])
     ->middleware(['auth'])
     ->name('store.edit');
 
+Route::post('/store/sign', [StorageController::class, 'shareSignature'])
+    ->middleware(['auth'])
+    ->name('store.sign');
+
 require __DIR__ . '/auth.php';

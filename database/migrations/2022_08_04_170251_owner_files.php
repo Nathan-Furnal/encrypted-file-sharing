@@ -21,6 +21,7 @@ return new class extends Migration
             $table->dateTime('created_at')->nullable();
             $table->foreign('owner_id', 'owner_file_id')->references('id')->on('users')->onDelete('cascade');
             $table->longText('enc_key');
+            $table->longText('signature');
         });
     }
 

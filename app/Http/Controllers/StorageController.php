@@ -13,7 +13,6 @@ use ParagonIE\Halite\Symmetric\Crypto;
 use ParagonIE\HiddenString\HiddenString;
 use ParagonIE\Halite\Stream\MutableFile;
 
-
 class StorageController extends Controller
 {
     private static $validExtensions = ['txt', 'csv', 'pdf', 'jpg', 'jpeg', 'png', 'docx', 'org'];
@@ -23,10 +22,20 @@ class StorageController extends Controller
         return KeyFactory::importEncryptionPublicKey(new HiddenString($out));
     }
 
+    private static function getUserPublicSignatureKey(int $user_id){
+        $out = Repository::getUserPublicSignKey($user_id);
+        return KeyFactory::importSignaturePublicKey(new HiddenString($out));
+    }
+
     private static function getUserPrivateKey(int $user_id){
         $email = Repository::getEmailFromUserId($user_id);
         return KeyFactory::loadEncryptionSecretKey(base_path().'/privateKeys/'.$email .'/key.pem');
     }
+
+    private static function getUserPrivateSignatureKey(int $user_id){
+        $email = Repository::getEmailFromUserId($user_id);
+        return KeyFactory::loadSignatureSecretKey(base_path().'/privateKeys/'.$email .'/sign.pem');
+    }    
 
     public static function getFiles(Request $request)
     {
@@ -76,8 +85,11 @@ class StorageController extends Controller
         $cipheredExt = Crypto::encrypt(new HiddenString($file->extension()), $enc_key);
         $pubKey = StorageController::getUserPublicKey(Auth::user()->id);
         $sealed = AsymmetricCrypto::seal(new HiddenString($keyAsString), $pubKey);
+        $privateSignKey = StorageController::getUserPrivateSignatureKey(Auth::user()->id);
+        // Sign then encrypt: https://crypto.stackexchange.com/questions/5458/should-we-sign-then-encrypt-or-encrypt-then-sign
+        $signature = File::sign($file, $privateSignKey);
         File::encrypt($file, storage_path().'/app/'.$cipheredName, $enc_key);
-        Repository::insertFile(Auth::user()->id, $cipheredName, $sealed, $cipheredExt);
+        Repository::insertFile(Auth::user()->id, $cipheredName, $sealed, $cipheredExt, $signature);
         return redirect('files');
     }
 
@@ -99,7 +111,10 @@ class StorageController extends Controller
             return redirect('files')->with('message', "The file extensions are not matching.");
         }
         Storage::disk('local')->delete($oldName);
+        $privateSignKey = StorageController::getUserPrivateSignatureKey(Auth::user()->id);
+        $signature = File::sign($newFile, $privateSignKey);
         File::encrypt($newFile, storage_path().'/app/'.$oldName, $enc_key);
+        Repository::updateSignature($request->id, $signature);
         return redirect('files')->with('message', "The file was updated successfully.");
         // TODO: Update signature
     }
@@ -108,7 +123,7 @@ class StorageController extends Controller
     {
         $privateKey = StorageController::getUserPrivateKey(Auth::user()->id);
         if($request->has('owner') && $request->has('friend')){
-            // content is re-encrypted when file is shared so a different content has to be fetched when a file is shared
+            // Symmetric key is encrypted when shared so info from the sender and the receiver are needed
             $sharedFile = Repository::getSharedFile($request->owner, $request->friend, $request->id)->first();
             $ownerPubKey = StorageController::getUserPublicKey($sharedFile->owner_id);
             $keyAsString = AsymmetricCrypto::decrypt($sharedFile->enc_key, $privateKey, $ownerPubKey);
@@ -127,13 +142,28 @@ class StorageController extends Controller
         $stream = new MutableFile(fopen('php://output', 'wb'));
         ob_start();
         File::decrypt($filepath, $stream, $enc_key);
+        $contents = ob_get_clean(); // buffer is empty after that
         // Can't believe it https://stackoverflow.com/questions/34624118/working-with-encrypted-files-in-laravel-how-to-download-decrypted-file
-        return response()->streamDownload(function() {
-            echo ob_get_clean(); // buffer is empty after that
+        return response()->streamDownload(function()use ($contents) {
+            echo $contents; 
         } ,$decipheredName);
-        return redirect('files');
     }
 
+    public static function shareSignature(Request $request){
+        $signature = Repository::getFileSignature($request->id);
+        if($request->has('owner') && $request->has('friend')){
+            $ownerSignPubKey = Repository::getUserPublicSignKey($request->owner);
+        }
+        else{
+            $ownerSignPubKey = Repository::getUserPublicSignKey(Auth::user()->id);
+        }
+        return response()->streamDownload(function() use($signature, $ownerSignPubKey){
+            echo "Signature: $signature\r\n";
+            echo "Public Key: $ownerSignPubKey";
+        }, 'signature-pubkey.txt');
+    }
+
+    
     public static function removeFile(Request $request){
         $file = Repository::getFile($request->id)->first();
         Repository::removeFile($file->id);

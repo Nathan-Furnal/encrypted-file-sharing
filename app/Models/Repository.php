@@ -86,13 +86,14 @@ class Repository
             ->get();
     }    
 
-    public static function insertFile(int $owner_id, string $name, string $enc_key, string $file_ext)
+    public static function insertFile(int $owner_id, string $name, string $enc_key, string $file_ext, string $signature)
     {
         DB::table('files')->insert(array(
             'owner_id' => $owner_id,
             'name' => $name,
             'enc_key' => $enc_key,
             'file_ext' => $file_ext,
+            'signature' => $signature,
             'created_at' => Carbon::now(),
         ));
     }
@@ -151,7 +152,19 @@ class Repository
         return DB::table('users')->where('id', '=', $user_id)->get('public_key_enc')->first()->public_key_enc;
     }
 
+    public static function getUserPublicSignKey(int $user_id){
+        return DB::table('users')->where('id', '=', $user_id)->get('public_key_sign')->first()->public_key_sign;
+    }
+
     public static function getExistingFileFromName(string $name){
         return DB::table('files')->where('name', $name)->get();
+    }
+
+    public static function updateSignature(int $file_id, string $newSignature){
+        DB::table('files')->where('id', $file_id)->first()->update(['signature' => $newSignature]);
+    }
+
+    public static function getFileSignature(int $file_id){
+        return DB::table('files')->where('id', $file_id)->get()->first()->signature;
     }
 }

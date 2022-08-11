@@ -932,6 +932,11 @@ select {
   background-color: rgb(56 189 248 / var(--tw-bg-opacity));  
 }
 
+.bg-stone-400 {
+  --tw-bg-opacity:1;
+  background-color: rgb(20 113 108 / var(--tw-bg-opacity));      
+}
+
 .fill-current {
   fill: currentColor;
 }
@@ -1204,6 +1209,11 @@ select {
 .hover\:bg-red-800:hover {
   --tw-bg-opacity: 1;
   background-color: rgb(153 27 27 / var(--tw-bg-opacity));
+}
+
+.hover\:bg-neutral-800:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(38 38 38 / var(--tw-bg-opacity));
 }
 
 .hover\:bg-green-800:hover {

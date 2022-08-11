@@ -42,7 +42,7 @@ class RegisteredUserController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
         $enc_keyPair = KeyFactory::generateEncryptionKeyPair();
-        $sign_keyPair = KeyFactory::generateEncryptionKeyPair();
+        $sign_keyPair = KeyFactory::generateSignatureKeyPair();
         $private_enc = $enc_keyPair->getSecretKey();
         $private_sign = $sign_keyPair->getSecretKey();
         $public_enc = $enc_keyPair->getPublicKey();
