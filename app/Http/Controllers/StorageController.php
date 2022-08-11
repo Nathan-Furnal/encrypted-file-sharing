@@ -12,7 +12,6 @@ use ParagonIE\Halite\KeyFactory;
 use ParagonIE\Halite\Symmetric\Crypto;
 use ParagonIE\HiddenString\HiddenString;
 use ParagonIE\Halite\Stream\MutableFile;
-use ParagonIE\Halite\Stream\ReadOnlyFile;
 
 /**
  * Provides the main controller for interaction between the user facing views and the storage.

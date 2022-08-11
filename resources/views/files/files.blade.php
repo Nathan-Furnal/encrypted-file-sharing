@@ -23,7 +23,7 @@
 						Note that you will only be able to share with someone from your contact list.
 					</p>
 					<p class="">
-					  To verify the signature of a file against the a file currently in storage, import a file through the bottom right form
+					  To verify the signature of a file against a file currently in storage, import a file through the bottom right form
 					  and click "Check signature". If the signature of the file you are uploading does not match what's in storage, you'll be alerted.
 					</p>
 
