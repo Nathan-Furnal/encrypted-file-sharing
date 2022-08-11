@@ -149,3 +149,48 @@ run:
 php artisan migrate
 ```
 which will create the DB and the tables required for the application.
+
+# Advised configuration
+
+This is not strictly necessary but will help for both security and logging
+purposes.
+
+## Environment
+
+In the `.env` file, the default behavior at the top of the file is: 
+```
+APP_NAME=Laravel
+APP_ENV=local
+APP_KEY=
+APP_DEBUG=true
+APP_URL=http://localhost
+```
+This is fine for development purposes but in practice, the debug features should
+not be exposed to the end users because they might reveal too much information
+about the system (exact versions, possible issues). It is better to use:
+```
+APP_NAME=Laravel
+APP_ENV=production
+APP_KEY=# Key generated with php artisan key:generate
+APP_DEBUG=false
+APP_URL=http://localhost # => replace with the name of the website, should be https://secg4.test
+```
+
+## Logging
+
+Laravel does log some of its interactions in `storage/logs/` but it is mostly
+about what code is called. For information about GET and POST requests and
+overall details about the web server, you have to enable it from within the box.
+
+The web server lives in the virtual box and by default does not log what is
+going on. You should go into the box with `vagrant ssh` and then navigate to 
+`/etc/nginx/sites-available/`, in there you will find a file with either the
+default name `homestead.test` or `secg4.test` depending on the order in which
+you followed the instructions.
+
+You then have to modify that file:
+
+```
+access_log off; -> access_log /var/log/nginx/secg4-test-access.log;
+```
+Logging will start once the server (nginx) restarts.
