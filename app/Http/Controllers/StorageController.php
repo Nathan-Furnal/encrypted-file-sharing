@@ -138,13 +138,16 @@ class StorageController extends Controller
      */
     public static function storeFile(Request $request)
     {
+        $request->validate([
+            'user_file' => 'max:5000', // Max 5000 Kb
+        ]);
         $file = $request->file('user_file');
         if ($file == null) {
             return redirect('files')->with('message', "A file must be uploaded.");
         }
         if (!in_array($file->extension(), StorageController::$validExtensions)) {
             return redirect('files')->with('message', 'Not a valid file extension, please use one of:  ' . implode(', ', StorageController::$validExtensions));
-        }
+        }        
         // 1. Generate the symmetric key
         // 2. Crypt the file and file name with it
         // 3. Store it after sealing with asymmetric encryption
@@ -179,6 +182,9 @@ class StorageController extends Controller
      */
     public static function editFile(Request $request)
     {
+        $request->validate([
+            'edit_file' => 'max:5000', // Max 5000 Kb
+        ]);
         $newFile = $request->file('edit_file');
         if ($newFile == null) {
             return redirect('files')->with('message', "A file must be uploaded.");
@@ -271,6 +277,9 @@ class StorageController extends Controller
      */
     public static function checkSignature(Request $request)
     {
+        $request->validate([
+            'sign_file' => 'max:5000', // Max 5000 Kb
+        ]);
         $file = $request->file('sign_file');
         if ($file == null) {
             return redirect('files')->with('message', "A file must be uploaded.");
