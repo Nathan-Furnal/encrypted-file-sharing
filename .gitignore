@@ -19,3 +19,5 @@ yarn-error.log
 /storage/app
 # Leave secrets alone
 privateKeys/
+# Do not save .vagrant which contains user specific info
+.vagrant
