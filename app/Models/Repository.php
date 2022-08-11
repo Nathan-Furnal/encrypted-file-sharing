@@ -161,10 +161,10 @@ class Repository
     }
 
     public static function updateSignature(int $file_id, string $newSignature){
-        DB::table('files')->where('id', $file_id)->first()->update(['signature' => $newSignature]);
+        DB::table('files')->where('id', $file_id)->update(['signature' => $newSignature]);
     }
 
     public static function getFileSignature(int $file_id){
-        return DB::table('files')->where('id', $file_id)->get()->first()->signature;
+        return DB::table('files')->where('id','=', $file_id)->get()->first()->signature;
     }
 }

@@ -1483,3 +1483,30 @@ select {
   }
 }
 
+.grid-content{
+    display: grid;
+  grid-template-columns: auto;
+  grid-template-rows: auto;    
+    grid-template-areas:
+	"file delete-button edit"
+	"share . signature";
+}
+
+.file-area{
+    grid-area: "file";
+}
+
+.edit-area{
+    grid-area: "edit";
+}
+
+.delete-area{
+    grid-area: "delete-button";
+}
+.share-area{
+    grid-area: "share";
+}
+.signature-area{
+    grid-area: "signature";
+}
+

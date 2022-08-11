@@ -68,7 +68,7 @@ Route::post('/store/edit', [StorageController::class, 'editFile'])
     ->middleware(['auth'])
     ->name('store.edit');
 
-Route::post('/store/sign', [StorageController::class, 'shareSignature'])
+Route::post('/store/sign', [StorageController::class, 'checkSignature'])
     ->middleware(['auth'])
     ->name('store.sign');
 

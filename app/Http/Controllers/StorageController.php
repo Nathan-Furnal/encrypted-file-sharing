@@ -12,6 +12,7 @@ use ParagonIE\Halite\KeyFactory;
 use ParagonIE\Halite\Symmetric\Crypto;
 use ParagonIE\HiddenString\HiddenString;
 use ParagonIE\Halite\Stream\MutableFile;
+use ParagonIE\Halite\Stream\ReadOnlyFile;
 
 class StorageController extends Controller
 {
@@ -149,18 +150,28 @@ class StorageController extends Controller
         } ,$decipheredName);
     }
 
-    public static function shareSignature(Request $request){
+    public static function checkSignature(Request $request){
+        $file = $request->file('sign_file');
+        if($file == null){
+            return redirect('files')->with('message', "A file must be uploaded.");
+        }
+        if(!in_array($file->extension(), StorageController::$validExtensions)){
+            return redirect('files')->with('message', 'Not a valid file extension, please use one of:  '.implode(', ', StorageController::$validExtensions));
+        }                
         $signature = Repository::getFileSignature($request->id);
         if($request->has('owner') && $request->has('friend')){
-            $ownerSignPubKey = Repository::getUserPublicSignKey($request->owner);
+            $ownerSignPubKey = StorageController::getUserPublicSignatureKey($request->owner);
         }
         else{
-            $ownerSignPubKey = Repository::getUserPublicSignKey(Auth::user()->id);
+            $ownerSignPubKey = StorageController::getUserPublicSignatureKey(Auth::user()->id);
         }
-        return response()->streamDownload(function() use($signature, $ownerSignPubKey){
-            echo "Signature: $signature\r\n";
-            echo "Public Key: $ownerSignPubKey";
-        }, 'signature-pubkey.txt');
+        $verify = File::verify($file, $ownerSignPubKey, $signature);
+        if($verify){
+            return redirect('files')->with('message', "The file was successfully verified!");
+        }
+        else{
+            return redirect('files')->with('error', "The file couldn't be verified =(");
+        }
     }
 
     
