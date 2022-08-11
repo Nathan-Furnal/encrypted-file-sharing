@@ -1,1 +1,0 @@
-{"virtualbox":{"/home/vagrant/code":{"type":null,"mount_options":["uid=1000","gid=1000","_netdev"],"guestpath":"/home/vagrant/code","hostpath":"C:/Users/thebl/Desktop/Ecole/secg4-second-session","disabled":false,"__vagrantfile":true},"/vagrant":{"guestpath":"/vagrant","hostpath":"C:/Users/thebl/Desktop/Ecole/secg4-second-session","disabled":false,"__vagrantfile":true}}}
