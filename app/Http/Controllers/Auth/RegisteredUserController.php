@@ -29,7 +29,7 @@ class RegisteredUserController extends Controller
     /**
      * Handle an incoming registration request.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\RedirectResponse
      *
      * @throws \Illuminate\Validation\ValidationException
@@ -41,6 +41,7 @@ class RegisteredUserController extends Controller
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
+        // Generate different keys for encryption and signing
         $enc_keyPair = KeyFactory::generateEncryptionKeyPair();
         $sign_keyPair = KeyFactory::generateSignatureKeyPair();
         $private_enc = $enc_keyPair->getSecretKey();
@@ -48,10 +49,10 @@ class RegisteredUserController extends Controller
         $public_enc = $enc_keyPair->getPublicKey();
         $public_sign = $sign_keyPair->getPublicKey();
         $path = base_path() . '/privateKeys/' . $request->email . '/';
-        if(!is_dir($path))
+        if (!is_dir($path))
             mkdir($path, 0777, true);
-        KeyFactory::save($private_enc, $path.'key.pem');
-        KeyFactory::save($private_sign, $path.'sign.pem');
+        KeyFactory::save($private_enc, $path . 'key.pem');
+        KeyFactory::save($private_sign, $path . 'sign.pem');
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
@@ -68,11 +69,17 @@ class RegisteredUserController extends Controller
         return redirect(RouteServiceProvider::HOME);
     }
 
-    public function destroy(){
+    /** Destroys the current user and all related files.
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     */
+    public function destroy()
+    {
         $id = Auth::user()->id;
         $email = DB::table('users')->where('id', $id)->get()->first()->email;
         $files = DB::table('files')->where('owner_id', $id)->get('name')->toArray();
-        $files = array_map(function($item){return $item->name;}, $files);
+        $files = array_map(function ($item) {
+            return $item->name;
+        }, $files);
         Storage::disk('local')->delete($files);
         Storage::disk('keys')->deleteDirectory($email);
         DB::table('users')->where('id', $id)->delete();

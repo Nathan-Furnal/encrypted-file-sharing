@@ -8,7 +8,6 @@ use Illuminate\support\Facades\Auth;
 
 class FriendsController extends Controller
 {
-
     public function index()
     {
         $users = Repository::getFriends(Auth::user()->id);
