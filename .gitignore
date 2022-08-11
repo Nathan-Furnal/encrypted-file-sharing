@@ -21,3 +21,7 @@ yarn-error.log
 privateKeys/
 # Do not save .vagrant which contains user specific info
 .vagrant
+# Ignore report images and data
+reportData/
+*.org
+*.tex
