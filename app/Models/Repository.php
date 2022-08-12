@@ -66,7 +66,8 @@ class Repository
     public static function addFriend(int $from, int $to)
     {
         $friends = Repository::getFriends($from);
-        if(!Repository::containFriend($friends, $to)){
+        $testFriendship = DB::table('friendships')->where('from_id', $from)->where('to_id', $to)->exists();
+        if(!Repository::containFriend($friends, $to) && !$testFriendship){
             $sql = "INSERT INTO friendships (from_id, to_id, status, created_at)"
                 . " VALUES (?,?,?,?)";
             DB::insert($sql, [$from, $to, 'pending', Carbon::now()]);
@@ -79,7 +80,7 @@ class Repository
      * @param User $candidateFriend
      * @return bool
      */
-    public static function containFriend(User $friends,User $candidateFriend){
+    public static function containFriend($friends,$candidateFriend){
         foreach($friends as $friend){
             if($friend->id == $candidateFriend){
                 return true;
