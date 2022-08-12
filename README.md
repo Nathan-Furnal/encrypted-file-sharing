@@ -151,6 +151,12 @@ php artisan migrate
 ```
 which will create the DB and the tables required for the application.
 
+## Usage
+
+Once all the previous steps are done, you can open the browser in which you
+modified the authorities and visit the `https://secg4.test` page to start using
+the application.
+
 # Advised configuration
 
 This is not strictly necessary but will help for both security and logging
