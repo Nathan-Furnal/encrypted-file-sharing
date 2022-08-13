@@ -278,4 +278,22 @@ class Repository
     public static function getFileSignature(int $file_id){
         return DB::table('files')->where('id','=', $file_id)->get()->first()->signature;
     }
+
+    /**
+     * @param int $user_id
+     * @param int $friend_id
+     */
+    public static function removeFriendship(int $user_id, int $friend_id){
+        DB::table('friendships')->where('from_id', $user_id)->where('to_id', $friend_id)->delete();
+    }
+
+    /**
+     * @param int $user_id
+     * @param int $friend_id
+     */
+    public static function removeSharedFiles(int $user_id, int $friend_id){
+        DB::table('file_sharing')->where('owner_id', $user_id)->where('friend_id', $friend_id)->delete();
+        DB::table('file_sharing')->where('owner_id', $friend_id)->where('friend_id', $user_id)->delete();        
+    }
 }
+

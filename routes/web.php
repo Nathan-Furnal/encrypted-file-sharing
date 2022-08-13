@@ -44,6 +44,10 @@ Route::get('/friends/reject/{user}', [FriendsController::class, 'rejectFriend'])
     ->middleware(['auth'])
     ->name('friends.reject');
 
+Route::post('/friends/delete', [FriendsController::class, 'deleteFriend'])
+    ->middleware(['auth'])
+    ->name('friends.delete');
+
 Route::get('/files', [StorageController::class, 'getFiles'])
     ->middleware(['auth'])
     ->name('files');

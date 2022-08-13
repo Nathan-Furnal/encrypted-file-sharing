@@ -4,7 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Repository;
 use App\Models\User;
-use Illuminate\support\Facades\Auth;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
 
 class FriendsController extends Controller
 {
@@ -41,6 +42,17 @@ class FriendsController extends Controller
     public function rejectFriend(User $user)
     {
         Repository::rejectFriend(Auth::user()->id, $user->id);
+        return redirect('friends');
+    }
+    
+    public function deleteFriend(Request $request){
+        $id = $request->friend_rm;
+        if(Repository::getFriendship(Auth::user()->id, $id)->first() != null){
+            Repository::removeFriendship(Auth::user()->id, $id);
+        }else{
+            Repository::removeFriendship($id, Auth::user()->id);
+        }
+        Repository::removeSharedFiles(Auth::user()->id, $id);
         return redirect('friends');
     }
 }
