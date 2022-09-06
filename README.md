@@ -19,8 +19,8 @@ below.
 First, clone the repository, using one the following: 
 
 ```sh
-git clone git@git.esi-bru.be:55803/secg4-second-session.git # for SSH
-git clone https://git.esi-bru.be/55803/secg4-second-session.git # for HTTPS
+git clone git@github.com:Nathan-Furnal/encrypted-file-sharing.git # for SSH
+git clone https://github.com/Nathan-Furnal/encrypted-file-sharing.git # for HTTPS
 ```
 Move into the directory with `cd secg4-second-session` and run:
 
