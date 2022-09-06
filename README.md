@@ -1,7 +1,7 @@
 # Secure software development and web security project
 
-The project was developed by Nathan Furnal (55803) and Rehan Duran (56055). The
-final security report is called `Report.pdf`.
+The project was developed by Nathan Furnal and Rehan Duran. The final security
+report is called `Report.pdf`.
 
 ## Requirements
 
