@@ -1,5 +1,12 @@
 # Warnings
-Do **NOT** use any of the application keys or private keys of this repo, they were generated strictly for demonstration purposes. Using those keys as they are will make your project unsecure.
+Do **NOT** use any of the application keys or private keys of this repo, they
+were generated strictly for demonstration purposes. Using those keys as they are
+will make your project insecure.
+
+You should also never expose keys in git commits like I did. A fix is to never
+expose them in the first place by ignoring `.vagrant/`. You could also rewrite
+the git history, which is unsafe since someone could've pulled the repo in the
+mean time. The final and true fix is to tear down the box and create a new one.
 
 # Secure software development and web security project
 
