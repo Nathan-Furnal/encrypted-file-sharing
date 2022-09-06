@@ -239,11 +239,14 @@ class StorageController extends Controller
             $enc_key = KeyFactory::importEncryptionKey($keyAsString);
             $file = Repository::getFile($request->id)->first();
             $decipheredName = Crypto::decrypt($file->name, $enc_key)->getString();
-        } else {
+        } elseif(Repository::getFile($request->id)->first()->owner_id === Auth::user()->id) { // this check is required to avoid broken access control
             $file = Repository::getFile($request->id)->first();
             $keyAsString = AsymmetricCrypto::unseal($file->enc_key, $privateKey);
             $enc_key = KeyFactory::importEncryptionKey($keyAsString);
             $decipheredName = Crypto::decrypt($file->name, $enc_key)->getString();
+        }
+        else{
+            abort(401);
         }
         $filepath = storage_path() . '/app/' . $file->name;
         // Write the file to the output buffer on the fly and empty it
