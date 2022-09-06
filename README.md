@@ -1,5 +1,5 @@
 # Warnings
-Do **NOT** use any of the application keys or private keys of this repo, they were generated strictly for demonstration purposes. Using those keys as they are make your project unsecure.
+Do **NOT** use any of the application keys or private keys of this repo, they were generated strictly for demonstration purposes. Using those keys as they are will make your project unsecure.
 
 # Secure software development and web security project
 
