@@ -211,3 +211,7 @@ You then have to modify that file:
 access_log off; -> access_log /var/log/nginx/secg4-test-access.log;
 ```
 Logging will start once the server (nginx) restarts.
+
+# Credits
+
+Project devised and created during my studies at the École Supérieure d'Informatique (ESI), Brussels.
